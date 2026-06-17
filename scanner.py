@@ -14,6 +14,22 @@ target = sys.argv[1]
 print(f"Escaneando: {target}")
 
 ports = [21, 22, 23, 25, 53, 80, 110, 139, 143, 443, 445, 3389]
+
+services = {
+    21: "FTP",
+    22: "SSH",
+    23: "Telnet",
+    25: "SMTP",
+    53: "DNS",
+    80: "HTTP",
+    110: "POP3",
+    139: "NetBIOS",
+    143: "IMAP",
+    443: "HTTPS",
+    445: "SMB",
+    3389: "RDP"
+}
+
 open_ports = []
 
 def scan_port(target, port):
@@ -25,7 +41,7 @@ def scan_port(target, port):
         result = sock.connect_ex((target, port))
 
         if result == 0:
-            print(f"[OPEN] Puerto {port}")
+            print(f"[OPEN] Puerto {port} - {services.get(port, 'Unknown')}")
             sock.close()
             return port
         else:
