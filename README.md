@@ -26,6 +26,3 @@ Ejecutar el programa con:
 
 ```bash
 python scanner.py
-
-Autor
-LeanGnzlz
