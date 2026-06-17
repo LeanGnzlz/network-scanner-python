@@ -1,5 +1,6 @@
 import sys
 import socket
+import datetime
 
 print("================================")
 print("      Network Scanner")
@@ -51,7 +52,32 @@ def scan_port(target, port):
 
     except socket.error:
         print(f"Error al conectar con el puerto {port}")
+    
+def save_report(target, open_ports):
+    now = datetime.datetime.now()
 
+    filename = f"reports/scan_{now.strftime('%Y%m%d_%H%M%S')}.txt"
+
+    with open(filename, "w") as file:
+        file.write("================================\n")
+        file.write("        NETWORK SCANNER REPORT\n")
+        file.write("================================\n\n")
+
+        file.write(f"Target: {target}\n\n")
+
+        file.write("Open ports:\n")
+
+        if open_ports:
+            for port in open_ports:
+                file.write(f"- Port {port}\n")
+        else:
+            file.write("No open ports found\n")
+
+        file.write("\n================================\n")
+        file.write("Scan completed\n")
+        file.write("================================\n")
+
+    print(f"\nReporte guardado: {filename}")
 
 for port in ports:
     result = scan_port(target, port)
@@ -63,3 +89,5 @@ print("================================")
 print("Escaneo finalizado")
 print(f"Puertos abiertos encontrados: {len(open_ports)}")
 print("================================")        
+
+save_report(target, open_ports)
