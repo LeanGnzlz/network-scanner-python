@@ -1,6 +1,7 @@
 import sys
 import socket
 import datetime
+import time
 
 print("================================")
 print("      Network Scanner")
@@ -13,6 +14,8 @@ if len(sys.argv) < 2:
 target = sys.argv[1]
 
 print(f"Escaneando: {target}")
+
+start_time = time.time()
 
 ports = [21, 22, 23, 25, 53, 80, 110, 139, 143, 443, 445, 3389]
 
@@ -53,7 +56,7 @@ def scan_port(target, port):
     except socket.error:
         print(f"Error al conectar con el puerto {port}")
     
-def save_report(target, open_ports):
+def save_report(target, open_ports, scan_duration, services):
     now = datetime.datetime.now()
 
     filename = f"reports/scan_{now.strftime('%Y%m%d_%H%M%S')}.txt"
@@ -69,13 +72,13 @@ def save_report(target, open_ports):
 
         if open_ports:
             for port in open_ports:
-                file.write(f"- Port {port}\n")
+                file.write(f"- Port {port} - {services.get(port, 'Unknown')}\n")
         else:
             file.write("No open ports found\n")
 
+        file.write(f"\nScan duration: {scan_duration:.2f} seconds\n")
+        file.write(f"Scan completed: {now.strftime('%Y-%m-%d %H:%M:%S')}\n")
         file.write("\n================================\n")
-        file.write("Scan completed\n")
-        file.write("================================\n")
 
     print(f"\nReporte guardado: {filename}")
 
@@ -85,9 +88,14 @@ for port in ports:
     if result:
         open_ports.append(result)
 
+end_time = time.time()
+
+scan_duration = end_time - start_time
+
 print("================================")
 print("Escaneo finalizado")
 print(f"Puertos abiertos encontrados: {len(open_ports)}")
-print("================================")        
+print(f"Tiempo de escaneo: {scan_duration:.2f} segundos")
+print("================================")
 
-save_report(target, open_ports)
+save_report(target, open_ports, scan_duration, services)
