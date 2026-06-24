@@ -36,14 +36,27 @@ services = {
     53: "DNS",
     80: "HTTP",
     110: "POP3",
+    135: "MSRPC",
     139: "NetBIOS",
     143: "IMAP",
     443: "HTTPS",
     445: "SMB",
     3389: "RDP"
-}
+    }
 
 open_ports = []
+scan_results = []
+
+banner_ports = [
+    21,
+    22,
+    23,
+    25,
+    80,
+    110,
+    143,
+    443
+]
 
 def scan_port(target, port):
     try:
@@ -61,8 +74,25 @@ def scan_port(target, port):
 
     except socket.error:
         print(f"Error al conectar con el puerto {port}")
-    
-def save_report(target, open_ports, scan_duration, services):
+
+def grab_banner(target, port):
+    try:
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+        sock.settimeout(2)
+
+        sock.connect((target, port))
+
+        banner = sock.recv(1024).decode(errors="ignore")
+
+        sock.close()
+
+        return banner.strip()
+
+    except:
+        return "No banner detected"
+
+def save_report(target, scan_results, scan_duration):
     now = datetime.datetime.now()
 
     filename = f"reports/scan_{now.strftime('%Y%m%d_%H%M%S')}.txt"
@@ -76,9 +106,10 @@ def save_report(target, open_ports, scan_duration, services):
 
         file.write("Open ports:\n")
 
-        if open_ports:
-            for port in open_ports:
-                file.write(f"- Port {port} - {services.get(port, 'Unknown')}\n")
+        if scan_results:
+            for result in scan_results:
+                file.write(f"- Port {result['port']} - {result['service']}\n")
+                file.write(f"  Banner: {result['banner']}\n\n")
         else:
             file.write("No open ports found\n")
 
@@ -96,9 +127,20 @@ with ThreadPoolExecutor(max_workers=50) as executor:
             open_ports.append(result)
 
 for port in sorted(open_ports):
-    print(f"[OPEN] Puerto {port} - {services.get(port, 'Unknown')}")
+    
+    if port in banner_ports:
+     banner = grab_banner(target, port)
+    else:
+     banner = "Not applicable"
 
-open_ports.sort()
+    print(f"[OPEN] Puerto {port} - {services.get(port, 'Unknown')}")
+    print(f"       Banner: {banner}")
+    
+    scan_results.append({
+        "port": port,
+        "service": services.get(port, "Unknown"),
+        "banner": banner
+    })
 
 end_time = time.time()
 
@@ -110,4 +152,4 @@ print(f"Puertos abiertos encontrados: {len(open_ports)}")
 print(f"Tiempo de escaneo: {scan_duration:.2f} segundos")
 print("================================")
 
-save_report(target, open_ports, scan_duration, services)
+save_report(target, scan_results, scan_duration)
