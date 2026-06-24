@@ -2,6 +2,7 @@ import sys
 import socket
 import datetime
 import time
+from concurrent.futures import ThreadPoolExecutor
 
 print("================================")
 print("      Network Scanner")
@@ -13,11 +14,19 @@ if len(sys.argv) < 2:
 
 target = sys.argv[1]
 
+full_scan = False
+
+if len(sys.argv) > 2 and sys.argv[2] == "--full":
+    full_scan = True
+
 print(f"Escaneando: {target}")
 
 start_time = time.time()
 
-ports = [21, 22, 23, 25, 53, 80, 110, 139, 143, 443, 445, 3389]
+if full_scan:
+    ports = range(1, 1025)
+else:
+    ports = [21, 22, 23, 25, 53, 80, 110, 139, 143, 443, 445, 3389]
 
 services = {
     21: "FTP",
@@ -45,13 +54,10 @@ def scan_port(target, port):
         result = sock.connect_ex((target, port))
 
         if result == 0:
-            print(f"[OPEN] Puerto {port} - {services.get(port, 'Unknown')}")
-            sock.close()
-            return port
+          return port
+          
         else:
-            print(f"[CLOSED] Puerto {port}")
-            sock.close()
-            return None
+          return None
 
     except socket.error:
         print(f"Error al conectar con el puerto {port}")
@@ -82,11 +88,17 @@ def save_report(target, open_ports, scan_duration, services):
 
     print(f"\nReporte guardado: {filename}")
 
-for port in ports:
-    result = scan_port(target, port)
+with ThreadPoolExecutor(max_workers=50) as executor:
+    results = executor.map(lambda port: scan_port(target, port), ports)
 
-    if result:
-        open_ports.append(result)
+    for result in results:
+        if result:
+            open_ports.append(result)
+
+for port in sorted(open_ports):
+    print(f"[OPEN] Puerto {port} - {services.get(port, 'Unknown')}")
+
+open_ports.sort()
 
 end_time = time.time()
 
