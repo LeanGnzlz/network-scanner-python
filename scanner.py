@@ -2,6 +2,7 @@ import sys
 import socket
 import datetime
 import time
+import json
 from concurrent.futures import ThreadPoolExecutor
 
 print("================================")
@@ -92,10 +93,10 @@ def grab_banner(target, port):
     except:
         return "No banner detected"
 
-def save_report(target, scan_results, scan_duration):
+def save_report(target, scan_results, scan_duration, scan_id):
     now = datetime.datetime.now()
 
-    filename = f"reports/scan_{now.strftime('%Y%m%d_%H%M%S')}.txt"
+    filename = f"reports/scan_{scan_id}.txt"
 
     with open(filename, "w") as file:
         file.write("================================\n")
@@ -118,6 +119,23 @@ def save_report(target, scan_results, scan_duration):
         file.write("\n================================\n")
 
     print(f"\nReporte guardado: {filename}")
+
+def save_json(target, scan_results, scan_duration, scan_id):
+    now = datetime.datetime.now()
+
+    filename = f"reports/scan_{scan_id}.json"
+
+    report = {
+        "target": target,
+        "scan_duration": round(scan_duration, 2),
+        "completed": now.strftime("%Y-%m-%d %H:%M:%S"),
+        "open_ports": scan_results
+    }
+
+    with open(filename, "w") as file:
+        json.dump(report, file, indent=4)
+
+    print(f"Reporte JSON guardado: {filename}")
 
 with ThreadPoolExecutor(max_workers=50) as executor:
     results = executor.map(lambda port: scan_port(target, port), ports)
@@ -146,10 +164,13 @@ end_time = time.time()
 
 scan_duration = end_time - start_time
 
+scan_id = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+
 print("================================")
 print("Escaneo finalizado")
 print(f"Puertos abiertos encontrados: {len(open_ports)}")
 print(f"Tiempo de escaneo: {scan_duration:.2f} segundos")
 print("================================")
 
-save_report(target, scan_results, scan_duration)
+save_report(target, scan_results, scan_duration, scan_id)
+save_json(target, scan_results, scan_duration, scan_id)
