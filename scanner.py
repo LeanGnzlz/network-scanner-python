@@ -20,7 +20,7 @@ full_scan = False
 if len(sys.argv) > 2 and sys.argv[2] == "--full":
     full_scan = True
 
-print(f"Escaneando: {target}")
+print(f"Target: {target}\n")
 
 start_time = time.time()
 
@@ -151,8 +151,8 @@ for port in sorted(open_ports):
     else:
      banner = "Not applicable"
 
-    print(f"[OPEN] Puerto {port} - {services.get(port, 'Unknown')}")
-    print(f"       Banner: {banner}")
+    print(f"[+] {port}/tcp OPEN  {services.get(port, 'Unknown')}")
+    print(f"    Banner: {banner}\n")
     
     scan_results.append({
         "port": port,
@@ -167,9 +167,9 @@ scan_duration = end_time - start_time
 scan_id = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
 
 print("================================")
-print("Escaneo finalizado")
-print(f"Puertos abiertos encontrados: {len(open_ports)}")
-print(f"Tiempo de escaneo: {scan_duration:.2f} segundos")
+print("Scan completed")
+print(f"Open ports found: {len(open_ports)}")
+print(f"Scan duration: {scan_duration:.2f} seconds")
 print("================================")
 
 save_report(target, scan_results, scan_duration, scan_id)
